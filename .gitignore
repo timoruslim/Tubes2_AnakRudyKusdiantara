@@ -1,0 +1,12 @@
+data/1_cnn_image_classification/*
+
+data/2_rnn_image_captioning/features/*
+data/2_rnn_image_captioning/images/*
+
+!data/2_rnn_image_captioning/features/.gitkeep
+!data/2_rnn_image_captioning/images/.gitkeep
+
+__pycache__/
+*.pyc
+
+.ipynb_checkpoints/
