@@ -1,8 +1,8 @@
 from .engine import Tensor, no_grad
-from .activation import ACTIVATIONS
-from .initialize import INITIALIZATIONS
-from .optimizer import OPTIMIZER
-from .loss import LOSSES
+from .activations import ACTIVATIONS
+from .initializers import INITIALIZATIONS
+from .optimizers import OPTIMIZER
+from .losses import LOSSES
 
 import pickle
 from tqdm.auto import tqdm
