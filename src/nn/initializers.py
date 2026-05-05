@@ -14,7 +14,7 @@ def _compute_connections(shape):
       
    return n_in, n_out
 
-def zero(shape, rng=None):
+def zero(shape):
    return Tensor(np.zeros(shape))
 
 def uniform(shape, low=None, high=None, rng=None):

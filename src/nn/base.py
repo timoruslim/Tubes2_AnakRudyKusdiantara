@@ -21,3 +21,6 @@ class Module:
    def zero_grad(self):
       for p in self.parameters():
          p.grad = np.zeros_like(p.data)
+
+   def regularization_loss(self):
+      return Tensor(0.0)
