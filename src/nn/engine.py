@@ -1,6 +1,6 @@
 import numpy as np
 import contextlib
-from typing import Any
+from functools import partial
 
 def _unbroadcast(grad, shape):
    while len(grad.shape) > len(shape):
@@ -245,6 +245,34 @@ class Tensor:
          self.grad += _unbroadcast(reshaped.grad.reshape(self.data.shape), self.data.shape)
       reshaped._backward = _backward
       return reshaped
+   
+   def split(self, indices_or_sections, axis=0):
+
+      if not _GradMode.enabled:
+         return [Tensor(part) for part in np.split(self.data, indices_or_sections, axis)]
+      
+      split_tensors = [Tensor(part, (self,)) for part in np.split(self.data, indices_or_sections, axis)]
+      
+      if isinstance(indices_or_sections, int):
+         sections = self.data.shape[axis] // indices_or_sections
+         indices = [sections * i for i in range(1, indices_or_sections)]
+      else:
+         indices = list(indices_or_sections)
+      
+      start = 0
+      for i, split_tensor in enumerate(split_tensors):
+
+         end = indices[i] if i < len(indices) else self.data.shape[axis]
+         
+         def _backward(child=split_tensor, start=start, end=end):
+            parent_view = self.grad.swapaxes(0, axis)
+            child_view = child.grad.swapaxes(0, axis)
+            parent_view[start:end] += child_view
+         
+         split_tensor._backward = _backward
+         start = end
+            
+      return split_tensors
    
    def transpose(self, axes=None):
 
