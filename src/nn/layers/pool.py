@@ -73,7 +73,7 @@ class AveragePooling2D(Layer):
          pad_width = ((0, 0), (p, p), (p, p), (0, 0))
          inputs = inputs.pad(pad_width, mode='constant', constant_values=0)
 
-      b, h_in, w_in, c = inputs.data.shape
+      b, h_in, w_in, c = inputs.data.shape # batch, height, width, channels
       k = self.pool_size
       
       if self.stride == self.pool_size and h_in % k == 0 and w_in % k == 0:
@@ -87,7 +87,7 @@ class AveragePooling2D(Layer):
          patches = []
          for i in range(h_out):
             for j in range(w_out):
-               patch = inputs[:, i*s:i*s+k, j*s:j*s+k, :]
+               patch = inputs[:, i*s:i*s+k, j*s:j*s+k, :] # receptive field
                p_mean = patch.mean(axis=(1, 2), keepdims=True)
                patches.append(p_mean)
          return Tensor.concatenate(patches, axis=1).reshape(b, h_out, w_out, c)
