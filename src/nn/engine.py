@@ -38,9 +38,10 @@ class no_grad(contextlib.ContextDecorator):
       _GradMode.enabled = self.prev
 
 class Tensor:
-   def __init__(self, data, _children=()):
+   def __init__(self, data, _children=(), requires_grad=False):
       self.data = np.array(data, dtype=float)
       self.grad = np.zeros_like(self.data)
+      self.requires_grad = requires_grad
       self._children = _children
       self._backward = lambda: None
 
