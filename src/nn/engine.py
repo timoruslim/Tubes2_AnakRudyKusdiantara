@@ -1,5 +1,6 @@
 import numpy as np
 import contextlib
+from typing import Any
 
 def _unbroadcast(grad, shape):
    while len(grad.shape) > len(shape):
@@ -8,6 +9,22 @@ def _unbroadcast(grad, shape):
       if dim == 1:
          grad = np.sum(grad, axis=i, keepdims=True)
    return grad
+
+def _restore_shape(grad, original_shape, axis):
+
+   kept_shape = list(original_shape)
+   
+   if axis is None:
+      axes = range(len(kept_shape))
+   elif isinstance(axis, int):
+      axes = [axis]
+   else:
+      axes = axis
+      
+   for ax in axes:
+      kept_shape[ax] = 1
+      
+   return grad.reshape(kept_shape)
 
 class _GradMode:
    enabled = True
@@ -178,11 +195,43 @@ class Tensor:
       if not _GradMode.enabled:
          return Tensor(np.sum(self.data, axis=axis, keepdims=keepdims))
       
-      sum = Tensor(np.sum(self.data, axis=axis, keepdims=keepdims), (self,))
+      sum_tensor = Tensor(np.sum(self.data, axis=axis, keepdims=keepdims), (self,))
       def _backward():
-         self.grad += _unbroadcast(sum.grad * np.ones_like(self.data), self.data.shape)
-      sum._backward = _backward
-      return sum
+         sum_grad = _restore_shape(sum_tensor.grad, self.data.shape, axis)
+         self.grad += _unbroadcast(sum_grad, self.data.shape) 
+      sum_tensor._backward = _backward
+      return sum_tensor
+   
+   def max(self, axis=None, keepdims=False):
+      
+      if not _GradMode.enabled:
+         return Tensor(np.max(self.data, axis=axis, keepdims=keepdims))
+      
+      max_tensor = Tensor(np.max(self.data, axis=axis, keepdims=keepdims), (self,))
+      def _backward():
+         max_grad = _restore_shape(max_tensor.grad, self.data.shape, axis)
+         mask = (self.data == np.max(self.data, axis=axis, keepdims=True))
+         self.grad += _unbroadcast(max_grad * mask, self.data.shape)
+      max_tensor._backward = _backward
+      return max_tensor
+   
+   def mean(self, axis=None, keepdims=False):
+      
+      if not _GradMode.enabled:
+         return Tensor(np.mean(self.data, axis=axis, keepdims=keepdims))
+      
+      mean = Tensor(np.mean(self.data, axis=axis, keepdims=keepdims), (self,))
+      def _backward():
+         if axis is None:
+            N = self.data.size
+         elif isinstance(axis, int):
+            N = self.data.shape[axis]
+         else:
+            N = np.prod([self.data.shape[ax] for ax in axis]) 
+         mean_grad = _restore_shape(mean.grad, self.data.shape, axis)
+         self.grad += _unbroadcast(mean_grad / N, self.data.shape)
+      mean._backward = _backward
+      return mean
    
    def reshape(self, *shape):
       if len(shape) == 1 and isinstance(shape[0], (tuple, list)):
@@ -208,6 +257,34 @@ class Tensor:
          self.grad += _unbroadcast(np.transpose(transposed.grad, axes=inverse_axes), self.data.shape)
       transposed._backward = _backward
       return transposed
+   
+   def pad(self, pad_width, mode='constant', constant_values=0):
+      if not _GradMode.enabled:
+         return Tensor(np.pad(self.data, pad_width, mode=mode, constant_values=constant_values)) # type: ignore
+
+      padded = Tensor(np.pad(self.data, pad_width, mode=mode, constant_values=constant_values), (self,)) # type: ignore
+      def _backward():
+         slices = []
+         for (pad_before, pad_after), dim in zip(pad_width, padded.grad.shape):
+            slices.append(slice(pad_before, dim - pad_after))
+         self.grad += _unbroadcast(padded.grad[tuple(slices)], self.data.shape)
+      padded._backward = _backward
+      return padded
+   
+   @staticmethod
+   def concatenate(tensors, axis=0):
+
+      if not _GradMode.enabled:
+         return Tensor(np.concatenate([t.data for t in tensors], axis))
+      
+      concat = Tensor(np.concatenate([t.data for t in tensors], axis), tuple(tensors))
+      def _backward():
+         indices = np.cumsum([t.data.shape[axis] for t in tensors])
+         split_grads = np.split(concat.grad, indices[:-1], axis=axis)
+         for t, g in zip(tensors, split_grads):
+            t.grad += _unbroadcast(g, t.data.shape)
+      concat._backward = _backward
+      return concat
    
    def backward(self):
       topo = []
