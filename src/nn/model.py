@@ -56,10 +56,13 @@ class Model(Module):
       if not self.layers:
          raise RuntimeError("Cannot compile a model with no layers. Use model.add(layer) first.")
 
-      if loss not in LOSSES: raise ValueError(f"Unknown loss: '{loss}'. Available losses: {list(LOSSES.keys())}")
+      if loss not in LOSSES: 
+         raise ValueError(f"Unknown loss: '{loss}'. Available losses: {list(LOSSES.keys())}")
       self.loss_fn = LOSSES[loss]
       
       if isinstance(optimizer, str):
+         if optimizer not in OPTIMIZER:
+            raise ValueError(f"Unknown optimizer: '{optimizer}'. Available optimizers: {list(OPTIMIZER.keys())}")
          self.optimizer = OPTIMIZER[optimizer](learning_rate=learning_rate, **kwargs)
       elif isinstance(optimizer, Optimizer):
          self.optimizer = optimizer
@@ -132,8 +135,7 @@ class Model(Module):
       num_batches = (len(X) + batch_size - 1) // batch_size
 
       for epoch in range(epochs):
-         if verbose:
-            print(f"Epoch {epoch+1}/{epochs}")
+         log_msg = f"Epoch {epoch+1}/{epochs}" 
 
          indices = self.rng.permutation(len(X))
          X = X[indices]
@@ -142,9 +144,9 @@ class Model(Module):
          epoch_loss = 0.0
 
          batch_iterator = range(0, len(X), batch_size)
-         pbar = tqdm(batch_iterator, desc="  Running", leave=False, bar_format='{l_bar}{bar:30}{r_bar}') if verbose == 2 else batch_iterator  # type: ignore
+         pbar = tqdm(total=num_batches, desc=log_msg, leave=True) if verbose == 2 else None  # type: ignore
          
-         for step, i in enumerate(pbar, 1):
+         for step, i in enumerate(batch_iterator, 1):
             batch_X = X[i:i+batch_size]
             batch_y = y[i:i+batch_size]
 
@@ -158,23 +160,29 @@ class Model(Module):
             loss.backward()
             self.optimizer.step()
 
-            if hasattr(pbar, 'set_postfix'):
+            if pbar is not None:
                running_loss = epoch_loss / step
-               getattr(pbar, 'set_postfix')({'loss': f"{running_loss:.4f}"})
+               pbar.set_postfix(loss=f"{running_loss:.4f}") # type: ignore
+               pbar.update(1)
          
          avg_loss = epoch_loss / num_batches
          history['train_loss'].append(avg_loss)
          
-         log_msg = f"  - loss: {avg_loss:.4f}"
+         log_msg += f" | loss: {avg_loss:.4f}"
          
          if validation_data is not None:
             X_val, y_val = validation_data
             val_loss = self.evaluate(X_val, y_val, batch_size)
 
             history['val_loss'].append(val_loss)
-            log_msg += f" - val_loss: {val_loss:.4f}"
+            log_msg += f" | val_loss: {val_loss:.4f}"
+            if pbar is not None:
+               pbar.set_postfix(loss=f"{avg_loss:.4f}", val_loss=f"{val_loss:.4f}") # type: ignore
 
-         print(log_msg) if verbose else None
+         if pbar is not None:
+            pbar.close()
+
+         print(log_msg) if verbose == 1 else None
 
       return history
    

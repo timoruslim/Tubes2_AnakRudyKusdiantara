@@ -57,7 +57,7 @@ def scce(pred, target, ignore_index=None):
    
    pred_correct = np.take_along_axis( # select predicted probability of correct class
       pred_safe, # (B, T, C)
-      target.data[..., None], # convert (B, T) to (B, T, 1) 
+      target.data[..., None].astype(int), # convert (B, T) to (B, T, 1) 
       axis=-1 
    ).squeeze(-1) # (B, T)
 
@@ -72,7 +72,12 @@ def scce(pred, target, ignore_index=None):
    def _backward():
       grad = np.zeros_like(pred_safe) # dL/dP_incorrect = 0 
       update = (-1.0 / (pred_correct[..., None] * N_valid)) * mask[..., None] # dL/dP_correct = -1 / (P_correct * N_valid) 
-      np.put_along_axis(grad, target.data[..., None], update, axis=-1) # combine into full gradient matrix
+      np.put_along_axis(
+         grad, 
+         target.data[..., None].astype(int), 
+         update, 
+         axis=-1
+      ) # combine into full gradient matrix
       pred.grad += _unbroadcast(grad * scce_loss.grad, pred.data.shape) # dL/dP = dL/dSCCE * dSCCE/dP = grad 
       
    scce_loss._backward = _backward
