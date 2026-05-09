@@ -31,7 +31,10 @@ class SimpleRNNCell(Layer):
       return self.activation(x_t @ self.W_ih + h_prev @ self.W_hh + self.bias)
    
    def build(self, input_shape):
+      if len(input_shape) != 3:
+         raise ValueError(f"Recurrent layers expect 3D input (batch, sequence_length, features), but got shape {input_shape}. Did you forget the batch dimension?")
       super().build(input_shape)
+
       self.input_size = input_shape[-1]
       self.W_ih = self.weight_initializer((self.input_size, self.hidden_size), rng=self.rng) 
       self.W_hh = self.weight_initializer((self.hidden_size, self.hidden_size), rng=self.rng) 
@@ -88,6 +91,8 @@ class LSTMCell(Layer):
       return h_t, c_t
    
    def build(self, input_shape):
+      if len(input_shape) != 3:
+         raise ValueError(f"Recurrent layers expect 3D input (batch, sequence_length, features), but got shape {input_shape}. Did you forget the batch dimension?")
       super().build(input_shape)
       self.input_size = input_shape[-1]
       
@@ -131,6 +136,8 @@ class SimpleRNN(Layer):
       return (output, h_t) if self.return_state else output
    
    def build(self, input_shape):
+      if len(input_shape) != 3:
+         raise ValueError(f"Recurrent layers expect 3D input (batch, sequence_length, features), but got shape {input_shape}. Did you forget the batch dimension?")
       super().build(input_shape)
       self.cell.build(input_shape)
       self.output_shape = (input_shape[0], input_shape[1], self.cell.hidden_size) if self.return_sequences else (input_shape[0], self.cell.hidden_size)
@@ -166,6 +173,8 @@ class LSTM(Layer):
       return (output, (h_t, c_t)) if self.return_state else output
    
    def build(self, input_shape):
+      if len(input_shape) != 3:
+         raise ValueError(f"Recurrent layers expect 3D input (batch, sequence_length, features), but got shape {input_shape}. Did you forget the batch dimension?")
       super().build(input_shape)
       self.cell.build(input_shape)
       self.output_shape = (input_shape[0], input_shape[1], self.cell.hidden_size) if self.return_sequences else (input_shape[0], self.cell.hidden_size)

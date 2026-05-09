@@ -39,6 +39,8 @@ class Conv2D(Layer):
       self.bias_initializer = INITIALIZATIONS[bias_init]
 
    def build(self, input_shape):
+      if len(input_shape) != 4:
+         raise ValueError(f"{self.__class__.__name__} expects 4D input (batch, height, width, channels), but got shape {input_shape}. Did you forget the batch dimension?")
       super().build(input_shape)
 
       self.h_in, self.w_in = input_shape[1], input_shape[2]
@@ -139,6 +141,8 @@ class LocallyConnected2D(Layer):
       return self.activation(h) if self.activation else h
 
    def build(self, input_shape):
+      if len(input_shape) != 4:
+         raise ValueError(f"{self.__class__.__name__} expects 4D input (batch, height, width, channels), but got shape {input_shape}. Did you forget the batch dimension?")
       super().build(input_shape)
 
       self.h_in, self.w_in = input_shape[1], input_shape[2]

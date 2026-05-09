@@ -12,6 +12,8 @@ class Flatten(Layer):
       return inputs.reshape(batch_size, -1)
    
    def build(self, input_shape):
+      if len(input_shape) < 2:
+         raise ValueError(f"Flatten expects at least 2D input (batch, features), but got shape {input_shape}. Did you forget the batch dimension?")
       super().build(input_shape)
       self.output_shape = (input_shape[0], int(np.prod(input_shape[1:])))
    
@@ -24,6 +26,8 @@ class GlobalMaxPooling2D(Layer):
       return inputs.max(axis=(1,2))
    
    def build(self, input_shape):
+      if len(input_shape) != 4:
+         raise ValueError(f"{self.__class__.__name__} expects 4D input (batch, height, width, channels), but got shape {input_shape}. Did you forget the batch dimension?")
       super().build(input_shape)
       self.output_shape = (input_shape[0], input_shape[-1])
    
@@ -36,6 +40,8 @@ class GlobalAveragePooling2D(Layer):
       return inputs.mean(axis=(1,2))
    
    def build(self, input_shape):
+      if len(input_shape) != 4:
+         raise ValueError(f"{self.__class__.__name__} expects 4D input (batch, height, width, channels), but got shape {input_shape}. Did you forget the batch dimension?")
       super().build(input_shape)
       self.output_shape = (input_shape[0], input_shape[-1])
 
@@ -76,6 +82,8 @@ class MaxPooling2D(Layer):
          return Tensor.concatenate(patches, axis=1).reshape(b, self.h_out, self.w_out, c)
       
    def build(self, input_shape):
+      if len(input_shape) != 4:
+         raise ValueError(f"{self.__class__.__name__} expects 4D input (batch, height, width, channels), but got shape {input_shape}. Did you forget the batch dimension?")
       super().build(input_shape)
       self.h_out = (input_shape[1] - self.pool_size + 2 * self.padding) // self.stride + 1
       self.w_out = (input_shape[2] - self.pool_size + 2 * self.padding) // self.stride + 1
@@ -118,6 +126,8 @@ class AveragePooling2D(Layer):
          return Tensor.concatenate(patches, axis=1).reshape(b, self.h_out, self.w_out, c)
 
    def build(self, input_shape):
+      if len(input_shape) != 4:
+         raise ValueError(f"{self.__class__.__name__} expects 4D input (batch, height, width, channels), but got shape {input_shape}. Did you forget the batch dimension?")
       super().build(input_shape)
       self.h_out = (input_shape[1] - self.pool_size + 2 * self.padding) // self.stride + 1
       self.w_out = (input_shape[2] - self.pool_size + 2 * self.padding) // self.stride + 1

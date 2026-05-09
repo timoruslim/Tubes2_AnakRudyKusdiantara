@@ -33,6 +33,8 @@ class Dense(Layer):
       return self.activation(h) if self.activation else h
    
    def build(self, input_shape):
+      if len(input_shape) < 2:
+         raise ValueError(f"Dense expects at least 2D input (batch, features), but got shape {input_shape}.")
       super().build(input_shape)
 
       self.input_size = input_shape[-1]

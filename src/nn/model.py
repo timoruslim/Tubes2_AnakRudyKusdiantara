@@ -24,17 +24,20 @@ class Model(Module):
          h = layer(h)
       return h
    
-   def regularization_loss(self):
-      reg_loss = Tensor(0.0)
-      for layer in self.layers:
-         reg_loss += layer.regularization_loss()
-      return reg_loss
-   
    def add(self, layer):
       if not isinstance(layer, Layer): 
          raise TypeError(f"model.add() expects a Layer instance, got {type(layer).__name__}")
       self.layers.append(layer)
-   
+
+   def build(self, input_shape):
+      current_shape = input_shape
+      for layer in self.layers:
+         layer.build(current_shape)
+         current_shape = layer.output_shape
+      if hasattr(self, 'optimizer'):
+         self.optimizer.build(self.parameters())
+      self.built = True
+
    def compile(self, optimizer, loss, learning_rate=0.001, **kwargs):
 
       if not self.layers:
@@ -58,6 +61,9 @@ class Model(Module):
       if len(X) == 0:
          raise ValueError("Dataset cannot be empty.")
       
+      if not hasattr(self, 'built') or not self.built:
+         self.build(X.shape)
+      
       with no_grad():
          outputs = []
          for i in range(0, len(X), batch_size):
@@ -65,6 +71,12 @@ class Model(Module):
             batch_output = self.forward(batch_X)
             outputs.append(batch_output.data)
          return np.concatenate(outputs, axis=0)
+      
+   def _regularization_loss(self):
+      reg_loss = Tensor(0.0)
+      for layer in self.layers:
+         reg_loss += layer.regularization_loss()
+      return reg_loss
       
    def evaluate(self, X, y, batch_size=32):
 
@@ -79,21 +91,22 @@ class Model(Module):
       with no_grad():
          y_pred = self.predict(X, batch_size)
          pred_loss = self.loss_fn(y_pred, y).data
-         reg_loss = self.regularization_loss().data
+         reg_loss = self._regularization_loss().data
          return pred_loss + reg_loss
       
    def fit(self, X, y, epochs=1, batch_size=32, validation_data=None):
-
-      if not self.optimizer.parameters:
-         # self.build() 
-         self.optimizer.build(self.parameters())
-
+      
       X = np.array(X)
       y = np.array(y)
       if len(X) == 0:
          raise ValueError("Dataset cannot be empty.")
       if len(X) != len(y): 
          raise ValueError(f"Input X (length {len(X)}) and target y (length {len(y)}) must have the same number of samples.")
+
+      if not hasattr(self, 'built') or not self.built:
+         self.build(X.shape)
+      if not self.optimizer.parameters:
+         self.optimizer.build(self.parameters())
 
       history = {'train_loss': [], 'val_loss': []}
       num_batches = (len(X) + batch_size - 1) // batch_size
@@ -111,7 +124,7 @@ class Model(Module):
 
             # Forward pass
             outputs = self.forward(batch_X)
-            loss = self.loss_fn(outputs, batch_y) + self.regularization_loss()
+            loss = self.loss_fn(outputs, batch_y) + self._regularization_loss()
             epoch_loss += loss.data
 
             # Backward pass 
