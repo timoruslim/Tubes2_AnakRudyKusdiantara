@@ -2,17 +2,29 @@ import numpy as np
 
 class Optimizer:
 
-   def __init__(self, parameters, learning_rate=0.01, clip_value=None, clip_norm=None, **kwargs):
-      self.parameters = parameters
+   def __init__(self, learning_rate=0.01, clip_value=None, clip_norm=None, **kwargs):
+      if learning_rate < 0:
+         raise ValueError(f"learning_rate must be non-negative, got {learning_rate}")
+      if clip_norm is not None and clip_norm <= 0:
+         raise ValueError(f"clip_norm must be strictly positive, got {clip_norm}")
+
+      self.parameters = []
       self.alpha = learning_rate
       self.clip_value = clip_value
       self.clip_norm = clip_norm
       self.params = kwargs
 
-   def step(self):
+   def step(self) -> None:
+      if not self.parameters:
+         raise RuntimeError("Optimizer has no parameters. Call optimizer.build(parameters) or model.compile() first.")
       raise NotImplementedError("Optimizer step method must be implemented by subclasses")
+   
+   def build(self, parameters):
+      self.parameters = parameters
 
    def zero_grad(self):
+      if not self.parameters:
+         raise RuntimeError("Optimizer has no parameters. Call optimizer.build(parameters) or model.compile() first.")
       for p in self.parameters:
          p.grad = np.zeros_like(p.data)
 
@@ -36,14 +48,17 @@ class SGD(Optimizer):
 
 class Adam(Optimizer):
 
-   def __init__(self, parameters, learning_rate=0.001, clip_value=None, clip_norm=None, **kwargs):
-      super().__init__(parameters, learning_rate, clip_value, clip_norm, **kwargs)
+   def __init__(self, learning_rate=0.001, clip_value=None, clip_norm=None, **kwargs):
+      super().__init__(learning_rate, clip_value, clip_norm, **kwargs)
       self.beta1 = self.params.get('beta1', 0.9)                           # defaul follows : https://arxiv.org/pdf/1412.6980
       self.beta2 = self.params.get('beta2', 0.999)
       self.epsilon = self.params.get('epsilon', 1e-8) 
+      self.t = 0
+
+   def build(self, parameters):
+      super().build(parameters)
       self.m = [np.zeros_like(p.data) for p in self.parameters]
       self.v = [np.zeros_like(p.data) for p in self.parameters]
-      self.t = 0
    
    def step(self):
       self._clip_gradients()

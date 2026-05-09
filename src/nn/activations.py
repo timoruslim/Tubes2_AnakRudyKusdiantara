@@ -23,13 +23,20 @@ def relu(h):
    return relu_h
 
 def sigmoid(h):
+   sig_h = np.where(
+      h.data >= 0,
+      1 / (1 + np.exp(-h.data)), # h >= 0 
+      np.exp(h.data) / (1 + np.exp(h.data)) # h < 0
+   )
+
    if not _GradMode.enabled:
-      return Tensor(1 / (1 + np.exp(-h.data)))
-   
-   sigmoid_h = Tensor(1 / (1 + np.exp(-h.data)), (h,))
+      return Tensor(sig_h)
+   sigmoid_h = Tensor(sig_h, (h,))
+
    def _backward():
       h.grad += _unbroadcast(sigmoid_h.grad * sigmoid_h.data * (1 - sigmoid_h.data), h.data.shape) # dL/dA = dL/dC * dC/dA = dL/dC * σ(A) * (1 - σ(A))
    sigmoid_h._backward = _backward
+   
    return sigmoid_h
 
 def tanh(h) :

@@ -28,7 +28,7 @@ def normal(shape, mean=None, var=None, rng=None):
    mean = mean if mean is not None else 0
    var = var if var is not None else 0.01
    if var <= 0:
-      raise ValueError("Variance must be positive for normal initialization")
+      raise ValueError("Variance must be positive for normal initialization.")
    return Tensor(rng.normal(mean, var ** 0.5, shape), requires_grad=True)
 
 def xavier(shape, rng=None): # source: https://proceedings.mlr.press/v9/glorot10a/glorot10a.pdf

@@ -317,6 +317,9 @@ class Tensor:
       return concat
    
    def backward(self):
+
+      if self.data.size != 1:
+         raise RuntimeError(f"backward() can only be called on scalar tensors (size 1), got shape {self.data.shape}. Reduce your loss to a scalar first.")
       
       topo = []
       visited = set()

@@ -83,5 +83,5 @@ LOSSES = {
    'mse': mse,
    'bce': bce,
    'cce': cce, 
-   'ssce': scce
+   'scce': scce
 }

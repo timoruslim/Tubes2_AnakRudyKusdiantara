@@ -4,14 +4,16 @@ from .base import Module
 from .initializers import INITIALIZATIONS
 from .activations import ACTIVATIONS
 from .losses import LOSSES
-from .optimizers import OPTIMIZER, Adam, SGD
+from .optimizers import OPTIMIZER, Adam, SGD, Optimizer
 import numpy as np
 
 class Model(Module):
 
-   def __init__(self, layers=None):
+   def __init__(self, layers=None, seed=None):
       super().__init__()
       self.layers = list(layers) if layers is not None else []
+      self.seed = seed
+      self.rng = np.random.default_rng(seed)
 
    def __call__(self, *args, **kwargs):
       return self.forward(*args, **kwargs)
@@ -29,13 +31,33 @@ class Model(Module):
       return reg_loss
    
    def add(self, layer):
+      if not isinstance(layer, Layer): 
+         raise TypeError(f"model.add() expects a Layer instance, got {type(layer).__name__}")
       self.layers.append(layer)
    
    def compile(self, optimizer, loss, learning_rate=0.001, **kwargs):
+
+      if not self.layers:
+         raise RuntimeError("Cannot compile a model with no layers. Use model.add(layer) first.")
+
+      if loss not in LOSSES: raise ValueError(f"Unknown loss: '{loss}'. Available losses: {list(LOSSES.keys())}")
       self.loss_fn = LOSSES[loss]
-      self.optimizer = OPTIMIZER[optimizer](self.parameters(), learning_rate=learning_rate, **kwargs)
+      
+      if isinstance(optimizer, str):
+         self.optimizer = OPTIMIZER[optimizer](learning_rate=learning_rate, **kwargs)
+      elif isinstance(optimizer, Optimizer):
+         self.optimizer = optimizer
+      else:
+         raise ValueError(f"Unknown optimizer: '{optimizer}'. Available optimizers: {list(OPTIMIZER.keys())}")
+      
+      self.optimizer.build(self.parameters())
 
    def predict(self, X, batch_size=32):
+
+      X = np.array(X)
+      if len(X) == 0:
+         raise ValueError("Dataset cannot be empty.")
+      
       with no_grad():
          outputs = []
          for i in range(0, len(X), batch_size):
@@ -45,6 +67,15 @@ class Model(Module):
          return np.concatenate(outputs, axis=0)
       
    def evaluate(self, X, y, batch_size=32):
+
+      X = np.array(X)
+      y = np.array(y)
+
+      if len(X) == 0:
+         raise ValueError("Dataset cannot be empty.")
+      if len(X) != len(y): 
+         raise ValueError(f"Input X (length {len(X)}) and target y (length {len(y)}) must have the same number of samples.")
+      
       with no_grad():
          y_pred = self.predict(X, batch_size)
          pred_loss = self.loss_fn(y_pred, y).data
@@ -52,11 +83,24 @@ class Model(Module):
          return pred_loss + reg_loss
       
    def fit(self, X, y, epochs=1, batch_size=32, validation_data=None):
+
+      if not self.optimizer.parameters:
+         # self.build() 
+         self.optimizer.build(self.parameters())
+
+      X = np.array(X)
+      y = np.array(y)
+      if len(X) == 0:
+         raise ValueError("Dataset cannot be empty.")
+      if len(X) != len(y): 
+         raise ValueError(f"Input X (length {len(X)}) and target y (length {len(y)}) must have the same number of samples.")
+
       history = {'train_loss': [], 'val_loss': []}
+      num_batches = (len(X) + batch_size - 1) // batch_size
 
       for epoch in range(epochs):
 
-         indices = np.random.permutation(len(X))
+         indices = self.rng.permutation(len(X))
          X = X[indices]
          y = y[indices]
 
@@ -75,7 +119,7 @@ class Model(Module):
             loss.backward()
             self.optimizer.step()
          
-         avg_loss = epoch_loss / len(X)
+         avg_loss = epoch_loss / num_batches
          history['train_loss'].append(avg_loss)
          print(f"Epoch {epoch+1}/{epochs}, Loss: {avg_loss:.4f}")
          

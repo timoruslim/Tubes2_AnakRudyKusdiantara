@@ -5,26 +5,38 @@ from ..activations import ACTIVATIONS
 import numpy as np
 
 class SimpleRNNCell(Layer):
-   def __init__(self, input_size, hidden_size, activation="tanh", weight_init='xavier', bias_init='zero', l1_lambda=0.0, l2_lambda=0.0, seed=None):
+   def __init__(self, hidden_size, activation="tanh", weight_init='xavier', bias_init='zero', l1_lambda=0.0, l2_lambda=0.0, seed=None):
       super().__init__()
+
+      if activation not in ACTIVATIONS:
+         raise ValueError(f"Unknown activation '{activation}'. Available: {list(ACTIVATIONS.keys())}")
+      if weight_init not in INITIALIZATIONS:
+         raise ValueError(f"Unknown weight_init '{weight_init}'. Available: {list(INITIALIZATIONS.keys())}")
+      if bias_init not in INITIALIZATIONS:
+         raise ValueError(f"Unknown bias_init '{bias_init}'. Available: {list(INITIALIZATIONS.keys())}")
+      if hidden_size <= 0:
+         raise ValueError(f"hidden_size must be strictly positive, got {hidden_size}.")
       
-      self.input_size = input_size
       self.hidden_size = hidden_size
       self.activation = ACTIVATIONS[activation]
 
       self.l1_lambda = l1_lambda
       self.l2_lambda = l2_lambda
 
-      rng = np.random.default_rng(seed)
-      weight_initializer = INITIALIZATIONS[weight_init]
-      bias_initializer = INITIALIZATIONS[bias_init]
-      
-      self.W_ih = weight_initializer((input_size, hidden_size), rng=rng) 
-      self.W_hh = weight_initializer((hidden_size, hidden_size), rng=rng) 
-      self.bias = bias_initializer((1, hidden_size), rng=rng) # single bias 
+      self.rng = np.random.default_rng(seed)
+      self.weight_initializer = INITIALIZATIONS[weight_init]
+      self.bias_initializer = INITIALIZATIONS[bias_init]
 
    def forward(self, x_t, h_prev):
       return self.activation(x_t @ self.W_ih + h_prev @ self.W_hh + self.bias)
+   
+   def build(self, input_shape):
+      super().build(input_shape)
+      self.input_size = input_shape[-1]
+      self.W_ih = self.weight_initializer((self.input_size, self.hidden_size), rng=self.rng) 
+      self.W_hh = self.weight_initializer((self.hidden_size, self.hidden_size), rng=self.rng) 
+      self.bias = self.bias_initializer((1, self.hidden_size), rng=self.rng) # single bias 
+
    
    def regularization_loss(self):
       reg_loss = Tensor(0.0) 
@@ -35,10 +47,20 @@ class SimpleRNNCell(Layer):
       return reg_loss
    
 class LSTMCell(Layer):
-   def __init__(self, input_size, hidden_size, activation="tanh", recurrent_activation="sigmoid", weight_init='xavier', bias_init='zero', l1_lambda=0.0, l2_lambda=0.0, seed=None):
+   def __init__(self, hidden_size, activation="tanh", recurrent_activation="sigmoid", weight_init='xavier', bias_init='zero', l1_lambda=0.0, l2_lambda=0.0, seed=None):
       super().__init__()
 
-      self.input_size = input_size
+      if activation not in ACTIVATIONS:
+         raise ValueError(f"Unknown activation '{activation}'. Available: {list(ACTIVATIONS.keys())}")
+      if recurrent_activation not in ACTIVATIONS:
+         raise ValueError(f"Unknown recurrent_activation '{recurrent_activation}'. Available: {list(ACTIVATIONS.keys())}")
+      if weight_init not in INITIALIZATIONS:
+         raise ValueError(f"Unknown weight_init '{weight_init}'. Available: {list(INITIALIZATIONS.keys())}")
+      if bias_init not in INITIALIZATIONS:
+         raise ValueError(f"Unknown bias_init '{bias_init}'. Available: {list(INITIALIZATIONS.keys())}")
+      if hidden_size <= 0:
+         raise ValueError(f"hidden_size must be strictly positive, got {hidden_size}.")
+
       self.hidden_size = hidden_size
 
       self.activation = ACTIVATIONS[activation]
@@ -47,14 +69,9 @@ class LSTMCell(Layer):
       self.l1_lambda = l1_lambda
       self.l2_lambda = l2_lambda
 
-      rng = np.random.default_rng(seed)
-      weight_initializer = INITIALIZATIONS[weight_init]
-      bias_initializer = INITIALIZATIONS[bias_init]
-      
-      self.W_ih = weight_initializer((input_size, 4 * hidden_size), rng=rng) 
-      self.W_hh = weight_initializer((hidden_size, 4 * hidden_size), rng=rng) 
-      self.bias = bias_initializer((1, 4 * hidden_size), rng=rng) 
-      self.bias.data[0, hidden_size:2*hidden_size] = 1.0 # forget gate bias to 1 (unit_forget_bias in Keras)
+      self.rng = np.random.default_rng(seed)
+      self.weight_initializer = INITIALIZATIONS[weight_init]
+      self.bias_initializer = INITIALIZATIONS[bias_init]
 
    def forward(self, x_t, h_prev, c_prev):
       gates = x_t @ self.W_ih + h_prev @ self.W_hh + self.bias
@@ -70,6 +87,15 @@ class LSTMCell(Layer):
 
       return h_t, c_t
    
+   def build(self, input_shape):
+      super().build(input_shape)
+      self.input_size = input_shape[-1]
+      
+      self.W_ih = self.weight_initializer((self.input_size, 4 * self.hidden_size), rng=self.rng) 
+      self.W_hh = self.weight_initializer((self.hidden_size, 4 * self.hidden_size), rng=self.rng) 
+      self.bias = self.bias_initializer((1, 4 * self.hidden_size), rng=self.rng) 
+      self.bias.data[0, self.hidden_size:2*self.hidden_size] = 1.0 # forget gate bias to 1 (unit_forget_bias in Keras)
+   
    def regularization_loss(self):
       reg_loss = Tensor(0.0) 
       if self.l1_lambda > 0:
@@ -79,10 +105,13 @@ class LSTMCell(Layer):
       return reg_loss
    
 class SimpleRNN(Layer):
-   def __init__(self, input_size, hidden_size, return_sequences=False, return_state=False, cell_kwargs=None):
+   def __init__(self, hidden_size, return_sequences=False, return_state=False, cell_kwargs=None):
       super().__init__()
+      if hidden_size <= 0:
+         raise ValueError(f"hidden_size must be strictly positive, got {hidden_size}.")
+      
       cell_kwargs = {} if cell_kwargs is None else cell_kwargs
-      self.cell = SimpleRNNCell(input_size, hidden_size, **cell_kwargs) 
+      self.cell = SimpleRNNCell(hidden_size, **cell_kwargs) 
       self.return_sequences = return_sequences
       self.return_state = return_state
 
@@ -101,14 +130,22 @@ class SimpleRNN(Layer):
 
       return (output, h_t) if self.return_state else output
    
+   def build(self, input_shape):
+      super().build(input_shape)
+      self.cell.build(input_shape)
+      self.output_shape = (input_shape[0], input_shape[1], self.cell.hidden_size) if self.return_sequences else (input_shape[0], self.cell.hidden_size)
+   
    def regularization_loss(self):
       return self.cell.regularization_loss()
    
 class LSTM(Layer):
-   def __init__(self, input_size, hidden_size, return_sequences=False, return_state=False, cell_kwargs=None):
+   def __init__(self, hidden_size, return_sequences=False, return_state=False, cell_kwargs=None):
       super().__init__()
+      if hidden_size <= 0:
+         raise ValueError(f"hidden_size must be strictly positive, got {hidden_size}.")
+      
       cell_kwargs = {} if cell_kwargs is None else cell_kwargs
-      self.cell = LSTMCell(input_size, hidden_size, **cell_kwargs) 
+      self.cell = LSTMCell(hidden_size, **cell_kwargs) 
       self.return_sequences = return_sequences
       self.return_state = return_state
 
@@ -128,5 +165,10 @@ class LSTM(Layer):
 
       return (output, (h_t, c_t)) if self.return_state else output
    
+   def build(self, input_shape):
+      super().build(input_shape)
+      self.cell.build(input_shape)
+      self.output_shape = (input_shape[0], input_shape[1], self.cell.hidden_size) if self.return_sequences else (input_shape[0], self.cell.hidden_size)
+
    def regularization_loss(self):
       return self.cell.regularization_loss()
