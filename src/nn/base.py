@@ -1,4 +1,3 @@
-from fastapi import params
 import numpy as np 
 from .engine import Tensor
 

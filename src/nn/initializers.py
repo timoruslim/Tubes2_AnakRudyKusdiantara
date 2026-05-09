@@ -14,14 +14,14 @@ def _compute_connections(shape):
       
    return n_in, n_out
 
-def zero(shape):
-   return Tensor(np.zeros(shape))
+def zero(shape, rng=None):
+   return Tensor(np.zeros(shape), requires_grad=True)
 
 def uniform(shape, low=None, high=None, rng=None):
    rng = rng or np.random.default_rng()
    low = low if low is not None else -0.1
    high = high if high is not None else 0.1
-   return Tensor(rng.uniform(low, high, shape))
+   return Tensor(rng.uniform(low, high, shape), requires_grad=True)
 
 def normal(shape, mean=None, var=None, rng=None):
    rng = rng or np.random.default_rng()
@@ -29,18 +29,18 @@ def normal(shape, mean=None, var=None, rng=None):
    var = var if var is not None else 0.01
    if var <= 0:
       raise ValueError("Variance must be positive for normal initialization")
-   return Tensor(rng.normal(mean, var ** 0.5, shape))
+   return Tensor(rng.normal(mean, var ** 0.5, shape), requires_grad=True)
 
 def xavier(shape, rng=None): # source: https://proceedings.mlr.press/v9/glorot10a/glorot10a.pdf
    rng = rng or np.random.default_rng()
    limit = np.sqrt(6 / (sum(_compute_connections(shape))))
-   return Tensor(rng.uniform(-limit, limit, shape))
+   return Tensor(rng.uniform(-limit, limit, shape), requires_grad=True)
 
 def he(shape, rng=None): # source: https://arxiv.org/abs/1502.01852
    rng = rng or np.random.default_rng()
    n_in, _ = _compute_connections(shape)
    stddev = np.sqrt(2 / n_in)
-   return Tensor(rng.normal(0, stddev, shape))
+   return Tensor(rng.normal(0, stddev, shape), requires_grad=True)
 
 INITIALIZATIONS = {
    'zero': zero,

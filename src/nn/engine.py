@@ -187,7 +187,7 @@ class Tensor:
          return Tensor(self.data[index])
       sliced = Tensor(self.data[index], (self,))
       def _backward():
-         self.grad[index] += sliced.grad
+         np.add.at(self.grad, index, sliced.grad)
       sliced._backward = _backward
       return sliced
    
@@ -210,8 +210,9 @@ class Tensor:
       
       max_tensor = Tensor(np.max(self.data, axis=axis, keepdims=keepdims), (self,))
       def _backward():
-         max_grad = _restore_shape(max_tensor.grad, self.data.shape, axis)
-         mask = (self.data == np.max(self.data, axis=axis, keepdims=True))
+         max_grad = _restore_shape(max_tensor.grad, self.data.shape, axis) # restore deleted axes
+         mask = (self.data == np.max(self.data, axis=axis, keepdims=True)).astype(float)
+         mask /= np.sum(mask, axis=axis, keepdims=True) # normalize in case of ties
          self.grad += _unbroadcast(max_grad * mask, self.data.shape)
       max_tensor._backward = _backward
       return max_tensor
@@ -316,15 +317,29 @@ class Tensor:
       return concat
    
    def backward(self):
+      
       topo = []
       visited = set()
-      def build_topo(tensor): # topological sort 
-         if tensor not in visited:
-            visited.add(tensor)
-            for child in tensor._children:
-               build_topo(child)
-            topo.append(tensor)
-      build_topo(self)
+      stack = [(self, False)]
+
+      while stack:
+         node, processed = stack.pop()
+         node_id = id(node)
+
+         if processed:
+            topo.append(node)
+            continue
+
+         if node_id in visited:
+            continue
+
+         visited.add(node_id)
+         stack.append((node, True))
+
+         for child in node._children:
+            if id(child) not in visited:
+               stack.append((child, False))
+
       self.grad = np.ones_like(self.data) # dL/dL = 1
       for tensor in reversed(topo):
          tensor._backward()

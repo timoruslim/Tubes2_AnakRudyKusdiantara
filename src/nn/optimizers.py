@@ -2,9 +2,11 @@ import numpy as np
 
 class Optimizer:
 
-   def __init__(self, parameters, learning_rate=0.01, **kwargs):
+   def __init__(self, parameters, learning_rate=0.01, clip_value=None, clip_norm=None, **kwargs):
       self.parameters = parameters
       self.alpha = learning_rate
+      self.clip_value = clip_value
+      self.clip_norm = clip_norm
       self.params = kwargs
 
    def step(self):
@@ -14,16 +16,28 @@ class Optimizer:
       for p in self.parameters:
          p.grad = np.zeros_like(p.data)
 
+   def _clip_gradients(self):
+      if self.clip_value is not None:
+         for p in self.parameters:
+            p.grad = np.clip(p.grad, -self.clip_value, self.clip_value)
+      if self.clip_norm is not None:
+         global_norm = np.sqrt(sum(np.sum(p.grad ** 2) for p in self.parameters))
+         if global_norm > self.clip_norm:
+            scale = self.clip_norm / (global_norm + 1e-6)
+            for p in self.parameters:
+               p.grad *= scale
+
 class SGD(Optimizer):
 
    def step(self):
+      self._clip_gradients()
       for p in self.parameters:
          p.data -= self.alpha * p.grad
 
 class Adam(Optimizer):
 
-   def __init__(self, parameters, learning_rate=0.001, **kwargs):
-      super().__init__(parameters, learning_rate, **kwargs)
+   def __init__(self, parameters, learning_rate=0.001, clip_value=None, clip_norm=None, **kwargs):
+      super().__init__(parameters, learning_rate, clip_value, clip_norm, **kwargs)
       self.beta1 = self.params.get('beta1', 0.9)                           # defaul follows : https://arxiv.org/pdf/1412.6980
       self.beta2 = self.params.get('beta2', 0.999)
       self.epsilon = self.params.get('epsilon', 1e-8) 
@@ -32,6 +46,7 @@ class Adam(Optimizer):
       self.t = 0
    
    def step(self):
+      self._clip_gradients()
       self.t += 1
       for i, p in enumerate(self.parameters):
          g = p.grad                                                        # get gradient

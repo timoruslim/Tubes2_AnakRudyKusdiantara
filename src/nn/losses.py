@@ -41,13 +41,47 @@ def cce(pred, target):
    cce_loss = Tensor(-np.mean(np.sum(target.data * np.log(p_safe), axis=-1)), (pred, target))
    def _backward():
       N = pred.data.size / pred.data.shape[-1]
-      pred.grad -= _unbroadcast((target.data / p_safe) / N * cce_loss.grad, pred.data.shape) # dL/dP = dL/dCCE * dCCE/dP = -T / P / N
+      pred.grad -= _unbroadcast((target.data / p_safe) / N * cce_loss.grad, pred.data.shape) # dL/dP = dL/dCCE * dCCE/dP = -T / (P * N) 
       target.grad -= _unbroadcast((np.log(p_safe)) / N * cce_loss.grad, target.data.shape) # dL/dT = dL/dCCE * dCCE/dT = -log(P) / N
    cce_loss._backward = _backward
    return cce_loss
 
+def scce(pred, target, ignore_index=None):
+   pred = pred if isinstance(pred, Tensor) else Tensor(pred.astype(np.float32))
+   target = target if isinstance(target, Tensor) else Tensor(target.astype(np.int32))
+
+   pred_safe = np.clip(pred.data, 1e-15, 1.0)
+
+   mask = target.data != ignore_index if ignore_index is not None else np.ones_like(target.data, dtype=bool) # mask out ignored tokens
+   N_valid = max(np.sum(mask), 1) # number of non-ignored tokens 
+   
+   pred_correct = np.take_along_axis( # select predicted probability of correct class
+      pred_safe, # (B, T, C)
+      target.data[..., None], # convert (B, T) to (B, T, 1) 
+      axis=-1 
+   ).squeeze(-1) # (B, T)
+
+   token_losses = -np.log(pred_correct) * mask # select non-ignored tokens 
+   loss_val = np.sum(token_losses) / N_valid 
+
+   if not _GradMode.enabled:
+      return Tensor(loss_val)
+
+   scce_loss = Tensor(loss_val, (pred, target))
+
+   def _backward():
+      grad = np.zeros_like(pred_safe) # dL/dP_incorrect = 0 
+      update = (-1.0 / (pred_correct[..., None] * N_valid)) * mask[..., None] # dL/dP_correct = -1 / (P_correct * N_valid) 
+      np.put_along_axis(grad, target.data[..., None], update, axis=-1) # combine into full gradient matrix
+      pred.grad += _unbroadcast(grad * scce_loss.grad, pred.data.shape) # dL/dP = dL/dSCCE * dSCCE/dP = grad 
+      
+   scce_loss._backward = _backward
+
+   return scce_loss
+
 LOSSES = {
    'mse': mse,
    'bce': bce,
-   'cce': cce
+   'cce': cce, 
+   'ssce': scce
 }

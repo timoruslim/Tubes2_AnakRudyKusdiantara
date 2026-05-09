@@ -10,3 +10,7 @@ __pycache__/
 *.pyc
 
 .ipynb_checkpoints/
+
+plan.md
+spek.md
+template.md
