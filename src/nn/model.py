@@ -1,3 +1,8 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+   from tqdm import tqdm
+
 from .layers.layer import Layer
 from .engine import Tensor, no_grad
 from .base import Module
@@ -27,7 +32,7 @@ class Model(Module):
       return self.forward(*args, **kwargs)
    
    def forward(self, inputs):
-      h = inputs
+      h = inputs if isinstance(inputs, Tensor) else Tensor(inputs)
       for layer in self.layers:
          h = layer(h)
       return h
@@ -102,7 +107,7 @@ class Model(Module):
          reg_loss = self._regularization_loss().data
          return pred_loss + reg_loss
       
-   def fit(self, X, y, epochs=1, batch_size=32, validation_data=None):
+   def fit(self, X, y, epochs=1, batch_size=32, verbose=2, validation_data=None):
       
       X = np.array(X)
       y = np.array(y)
@@ -116,17 +121,30 @@ class Model(Module):
       if not self.optimizer.parameters:
          self.optimizer.build(self.parameters())
 
+      if verbose == 2:
+         try:
+            from tqdm import tqdm
+         except ImportError:
+            print("tqdm is not installed. Install it to see progress bars: pip install tqdm")
+            verbose = 1
+
       history = {'train_loss': [], 'val_loss': []}
       num_batches = (len(X) + batch_size - 1) // batch_size
 
       for epoch in range(epochs):
+         if verbose:
+            print(f"Epoch {epoch+1}/{epochs}")
 
          indices = self.rng.permutation(len(X))
          X = X[indices]
          y = y[indices]
 
          epoch_loss = 0.0
-         for i in range(0, len(X), batch_size):
+
+         batch_iterator = range(0, len(X), batch_size)
+         pbar = tqdm(batch_iterator, desc="  Running", leave=False, bar_format='{l_bar}{bar:30}{r_bar}') if verbose == 2 else batch_iterator  # type: ignore
+         
+         for step, i in enumerate(pbar, 1):
             batch_X = X[i:i+batch_size]
             batch_y = y[i:i+batch_size]
 
@@ -139,16 +157,24 @@ class Model(Module):
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+
+            if hasattr(pbar, 'set_postfix'):
+               running_loss = epoch_loss / step
+               getattr(pbar, 'set_postfix')({'loss': f"{running_loss:.4f}"})
          
          avg_loss = epoch_loss / num_batches
          history['train_loss'].append(avg_loss)
-         print(f"Epoch {epoch+1}/{epochs}, Loss: {avg_loss:.4f}")
+         
+         log_msg = f"  - loss: {avg_loss:.4f}"
          
          if validation_data is not None:
             X_val, y_val = validation_data
             val_loss = self.evaluate(X_val, y_val, batch_size)
-            print(f", Validation Loss: {val_loss:.4f}")
+
             history['val_loss'].append(val_loss)
+            log_msg += f" - val_loss: {val_loss:.4f}"
+
+         print(log_msg) if verbose else None
 
       return history
    

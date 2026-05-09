@@ -1,5 +1,7 @@
 data/1_cnn_image_classification/*
 
+!data/1_cnn_image_classification/*/.gitkeep
+
 data/2_rnn_image_captioning/features/*
 data/2_rnn_image_captioning/images/*
 
@@ -13,3 +15,5 @@ __pycache__/
 
 spesifikasi.md
 template.md
+
+test.ipynb
