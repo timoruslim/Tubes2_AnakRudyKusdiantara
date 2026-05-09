@@ -5,7 +5,7 @@ def _collect(obj, params):
    if isinstance(obj, Tensor):
       params.append(obj)
    elif isinstance(obj, Module):
-      params.extend(obj.parameters())
+      params.extend(obj.tensors())
    elif isinstance(obj, (list, tuple)):
       for item in obj:
          _collect(item, params)
@@ -36,5 +36,5 @@ class Module:
          p.requires_grad = False
       
    def unfreeze(self):
-      for p in self.parameters():
+      for p in self.tensors():
          p.requires_grad = True

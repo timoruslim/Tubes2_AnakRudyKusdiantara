@@ -11,9 +11,17 @@ class Model(Module):
 
    def __init__(self, layers=None, seed=None):
       super().__init__()
-      self.layers = list(layers) if layers is not None else []
+      
       self.seed = seed
       self.rng = np.random.default_rng(seed)
+
+      self.layers = []
+      if layers is not None:
+         for layer in layers:
+               self.add(layer) # use add to ensure proper checks 
+
+      if self.layers and self.layers[0].__class__.__name__ == 'Input':
+         self.build(self.layers[0].shape)
 
    def __call__(self, *args, **kwargs):
       return self.forward(*args, **kwargs)
@@ -145,20 +153,50 @@ class Model(Module):
       return history
    
    def summary(self):
+      if not hasattr(self, 'built') or not self.built: 
+         raise RuntimeError("You must add Input layer or call build() before calling summary().")
+
       print("\n" + "=" * 67)
-      print(f"{'Layer':<17} {'Output Shape':<17} {'Param #':<16}")
+      print(f"{'Layer':<22} {'Output Shape':<23} {'Param #':<22}")
       print("=" * 67)
       
       total_params = 0
-      layer_count = 0
+      trainable_params = 0
       
       for layer in self.layers:
          
-         # Get name
-         # Get shape
-         # Get parameters
-         pass 
-      
+         name = layer.__class__.__name__ + f"({layer.activation.__name__ if hasattr(layer, 'activation') and layer.activation else ''})"
+         shape = str(getattr(layer, 'output_shape', 'Unknown'))
+         layer_total = sum(p.data.size for p in layer.tensors())
+         layer_trainable = sum(p.data.size for p in layer.parameters())
+
+         print(f"{name:<22} {shape:<23} {layer_total:<22,}")
+         total_params += layer_total
+         trainable_params += layer_trainable
+
       print("=" * 67)
       print(f"Total parameters: {total_params:,}")
+      print(f"Trainable parameters: {trainable_params:,}")
+      print(f"Non-trainable params: {total_params - trainable_params:,}")
       print("=" * 67 + "\n")
+
+   def save(self, filepath):
+      if not hasattr(self, 'built') or not self.built: 
+         raise RuntimeError("You must add Input layer or call build() before calling save().")
+      
+      params = {f"param_{i}": p.data for i, p in enumerate(self.tensors())}
+      np.savez(filepath, **params)
+
+   def load(self, filepath):
+      if not hasattr(self, 'built') or not self.built: 
+         raise RuntimeError("You must add Input layer or call build() before calling load().")
+      
+      data = np.load(filepath)
+      params = self.tensors()
+      if len(data.files) != len(params):
+         raise ValueError(f"Number of parameters in file ({len(data.files)}) does not match model parameters ({len(params)}).")
+      for i, p in enumerate(params):
+         saved_data = data[f"param_{i}"]
+         if p.data.shape != saved_data.shape:
+            raise ValueError(f"Shape mismatch for param_{i}: model expects {p.data.shape}, but file contains {saved_data.shape}.")
+         p.data = saved_data

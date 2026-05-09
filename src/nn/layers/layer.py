@@ -15,3 +15,15 @@ class Layer(Module):
    def build(self, input_shape):
       self.input_shape = input_shape
       self.built = True
+
+class Input(Layer):
+   def __init__(self, shape):
+      super().__init__()
+      self.shape = shape
+      self.output_shape = shape
+      
+   def build(self, input_shape):
+      self.built = True
+      
+   def forward(self, inputs):
+      return inputs 
