@@ -29,7 +29,7 @@ def load_keras_weights(custom_model, keras_model, verbose=False):
       
       if k_size != c_size:
          raise ValueError(
-               f"Element count mismatch at parameter index {i}: Keras shape {keras_param.shape} ({k_size} elements) vs Custom shape {custom_param.data.shape} ({c_size} elements)."
+            f"Element count mismatch at parameter index {i}: Keras shape {keras_param.shape} ({k_size} elements) vs Custom shape {custom_param.data.shape} ({c_size} elements)."
          )
       
       if verbose:
