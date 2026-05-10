@@ -1,5 +1,8 @@
 data/1_cnn_image_classification/*
+!data/1_cnn_image_classification/.gitkeep
+
 data/2_rnn_image_captioning/*
+!data/2_rnn_image_captioning/.gitkeep
 
 __pycache__/
 *.pyc
