@@ -10,7 +10,7 @@ from keras.applications.inception_v3 import preprocess_input
 SCRIPT_DIR = Path(__file__).parent
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
 
-sys.path.append(str(PROJECT_ROOT))
+sys.path.append(str(SCRIPT_DIR.parent))
 from utility.image_utils import load_image
 
 def extract_and_output_features(image_dir, output_dir, target_size=(299, 299)):
