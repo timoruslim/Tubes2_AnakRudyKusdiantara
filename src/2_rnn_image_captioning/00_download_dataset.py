@@ -15,7 +15,7 @@ def download_and_extract():
    images_target_dir = output_dir / "images"
    os.makedirs(images_target_dir, exist_ok=True)
    
-   with tempfile.TemporaryDirectory() as temp_dir:
+   with tempfile.TemporaryDirectory(dir=output_dir) as temp_dir:
 
       print(f"\nDownloading {dataset_name} to temporary directory...")
       subprocess.run(["kaggle", "datasets", "download", "-d", dataset_name, "-p", temp_dir, "--unzip"], check=True)
