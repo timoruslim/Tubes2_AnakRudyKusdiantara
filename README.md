@@ -1,6 +1,6 @@
 <div align="center">
 
-# Feed-Forward Neural Network
+# Convolutional and Recurrent Neural Networks
 
 ![Python](https://img.shields.io/badge/Python-3.13-blue?logo=python&logoColor=white)
 ![NumPy](https://img.shields.io/badge/NumPy-2.2-4DABCF?logo=numpy&logoColor=fff)
@@ -11,49 +11,76 @@
 
 ## 📘 Deskripsi
 
-Di sini, kami membuat package untuk mengimplementasikan **Multi-Layer Perceptron** (MLP) atau **Feed-Forward Neural Network** (FFNN). Package secara efisien dan modular menerapkan _forward pass_, _backpropagation_, dan optimisasi bobot yang menjadi pokok mekanisme MLP. Dengan pacakage ini, pengguna dapat membangun MLP sendiri dengan sangat mudah, seperti `Scikit`, tetapi dengan arsitektur yang sangat _customizable_, seperti `Pytorch` atau `TensorFlow`. Lalu, dilakukan analisis dan pemodelan dari dataset _Global Student Placement \& Salary Dataset_ menggunakan package yang sudah dibuat.
+Di sini, kami membuat package `nn` yang memuat semua keperluan pembangunan suatu _neural network_ secara lengkap. Package ini meliputi layer-layer dense, konvolusi, pooling, rekuren, embedding, dan lainnya. Kedua _forward_ dan _backward pass_ diimplementasikan di package ini juga! Terdapat banyak jenis kustomisasi lainnya seperti fungsi aktivasi, metode inisialisasi bobot, fungsi loss, dan metode optimisasi. Implementasi selengkapnya bisa dilihat di folder [`src/nn/`](./src/nn).
+
+Selanjutnya, kami juga menerapkan package ini dalam menyelesaikan dua permasalahan. Pertama, kami membuat arsitektur CNN secara _custom_ untuk menyelesaikan masalah _image captioning_ dari dataset [Intel Image Classification](https://www.kaggle.com/datasets/puneet6060/intel-image-classification). Kedua, kami mereplikasikan arsitektur RNN berupa Encoder-Decoder "Show and Tell" oleh [Vinyals et al.](https://arxiv.org/abs/1411.4555) untuk menyelesaikan masalah _image captioning_ dari dataset [Flickr8k](https://www.kaggle.com/datasets/adityajn105/flickr8k). Implementasi selengkapnya bisa dilihat di folder [`src/1_cnn_image_classification/`](./src/1_cnn_image_classification) dan [`src/2_rnn_image_captioning/`](./src/2_rnn_image_captioning).
 
 ---
 
 ## ✨ Fitur Utama
 
-- 📐 **Automatic Differentiation**
-   - Kelas `Tensor` yang bisa menyimpan data dan gradien.
-   - Pembentukan graf komputasi berisi `Tensor` untuk memudahkan _forward pass_ dan _backpropagation_.
-- 🧩 **Customizble Layer**
-   - Spesifikasi jumlah neuron, jenis aktivasi, inisialisasi bobot, dan regularisasi.
-   - Implementasi RMSNorm.
-- 🎯 **Efficient Fitting**
-   - Spesifikasi _learning rate_, fungsi loss, dan metode optimisasi.
-   - Implementasi Adam Optimizer.
-- 🔍 **Model Transparency**
-   - Pencatatan rinci nilai dan gradien bobot tiap layer.
-   - Memungkinkan visualisasi, penyimpanan, dan pemuatan bobot.
+- 📐 **Deep Learning Framework**
+   - Implementasi framework _neural network_ sepenuhnya berbasis NumPy murni _from scratch_.
+   - Engine `Tensor` yang mendukung _forward_ dan _backward pass_ secara bersamaan dengan metode _autodifferentiation_.
+   - Mendukung integrasi layer yang beragam (Conv2D, LocallyConnected2D, SimpleRNN, LSTM, Embedding, Pooling).
+   - Kustomisasi fungsi aktivasi, metode inisialisasi bobot, fungsi loss, dan metode optimisasi.
+   - Mendukung penyimpanan dan pemuatan parameter model, serta penerjemahannya dari `Keras`.
+- 🖼️ **Convolutional Neural Network**
+   - Pipeline klasifikasi gambar _end-to-end_ untuk [Intel Image Classification](https://www.kaggle.com/datasets/puneet6060/intel-image-classification).
+   - Visualisasi Grad-CAM untuk menginterpretasikan area fokus model.
+- 🗣️ **Recurrent Neural Network (Encoder-Decoder)**
+   - Pembangunan arsitektur _Encoder-Decoder_ untuk dataset [Flickr8k](https://www.kaggle.com/datasets/adityajn105/flickr8k).
+   - Memanfaatkan Pretrained-CNN sebagai _feature extractor_ yang diinjeksi ke dalam RNN/LSTM _decoder_ kustom.
+- 🔬 **Comprehensive Experiments & Explorations**
+   - Pengujian yang dilakukan secara _rigorous_ untuk mengerti arsitektur yang dibangun.
+   - Eksperimen pengaruh _hyperparameter_ dieksplorasi secara khusus.
 
 ---
 
 ## 📁 Struktur Folder
 
 ```
-
-Tubes1_Six-Seven/
+Tubes2_AnakRudyKusdiantara/
 ├── data/
-│   └── datasetml_2026.csv
+│   ├── 1_cnn_image_classification/
+│   └── 2_rnn_image_captioning/
 ├── doc/
-│   └── Tubes1_K1_Six-seven.pdf
+│   └── Tubes2_AnakRudyKusdiantara.pdf
 ├── src/
-│   ├── ffnn/
-│   │   ├── activation.py
+│   ├── 1_cnn_image_classification/
+│   │   ├── 00_download_dataset.py
+│   │   ├── 01_keras_training.ipynb
+│   │   ├── 02_scratch_inference.ipynb
+│   │   └── 03_grad_cam.ipynb
+│   ├── 2_rnn_image_captioning/
+│   │   ├── 00_download_dataset.py
+│   │   ├── 01_extract_features.py
+│   │   ├── 02_caption_preprocessing.ipynb
+│   │   ├── 03_keras_training.ipynb
+│   │   ├── 04_scratch_inference.ipynb
+│   │   └── 05_bonus_experiments.ipynb
+│   ├── nn/
+│   │   ├── layers/
+│   │   │   ├── conv.py
+│   │   │   ├── dense.py
+│   │   │   ├── embedding.py
+│   │   │   ├── layer.py
+│   │   │   ├── normalization.py
+│   │   │   ├── pool.py
+│   │   │   └── recurrent.py
+│   │   ├── activations.py
+│   │   ├── base.py
 │   │   ├── engine.py
-│   │   ├── initialize.py
-│   │   ├── loss.py
-│   │   ├── nn.py
-│   │   └── optimizer.py
-│   └── pengujian/
-│       ├── pengujian.ipynb
-│       └── test.ipynb
+│   │   ├── initializers.py
+│   │   ├── losses.py
+│   │   ├── model.py
+│   │   └── optimizers.py
+│   ├── utility/
+│   │   ├── image_utils.py
+│   │   ├── model_loader.py
+│   │   └── text_utils.py
+│   └── doc.ipynb
 └── README.md
-
 ```
 
 ---
@@ -62,21 +89,26 @@ Tubes1_Six-Seven/
 
 ### Prasyarat Package
 
-- python ≥ 3.13
-- numpy ≥ 2.2
-- scipy ≥ 1.17.1
-- matplotlib ≥ 3.10
-- tqdm ≥ 4.67.3
-- ipywidgets ≥ 8.1.8
-- ipykernel (untuk notebook)
+- numpy>=2.3.2
+- scipy>=1.16.1
+- matplotlib>=3.10.6
+- pandas>=2.3.2
+- tqdm>=4.67.3
+- seaborn>=0.13.2
+- kaggle>=1.7.4.5
+- Pillow>=11.3.0
+- keras>=3.11.3
+- tensorflow>=2.20.0
+- notebook>=7.4.5
+- nltk>=3.9.1
 
 ### Instalasi Package
 
 1. Clone repository.
 
    ```bash
-   git clone https://github.com/timoruslim/Tubes1_Six-Seven.git
-   cd Tubes1_Six-Seven
+   git clone https://github.com/timoruslim/Tubes2_AnakRudyKusdiantara.git
+   cd Tubes2_AnakRudyKusdiantara
    ```
 
 2. Pasang dependensi.
@@ -88,116 +120,62 @@ Tubes1_Six-Seven/
    Jika file `requirements.txt` belum ada, bisa install manual.
 
    ```bash
-   pip install numpy scipy matplotlib tqdm ipywidgets ipykernel
+   pip install numpy scipy matplotlib pandas tqdm seaborn kaggle Pillow keras tensorflow notebook nltk
    ```
 
-### Pengujian
+### Instalasi Dataset
 
-Jika ingin menggunakan file `ipynb` pada folder `\pengujian`, diperlukan juga berikut.
+Jika ingin melakukan bereksperimentasi dengan pelatihan atau pengujian kedua model kami, pastikan telah menyiapkan dataset sebagai berikut.
 
-- scikit-learn ≥ 1.8.0
-- pandas ≥ 3.0.1
+#### Bagian 1: CNN Image Classification
 
-Instalasinya sudah termasuk dalam file `ipynb`.
+1. **Download Dataset:**
+   Unduh dataset [Intel Image Classification](https://www.kaggle.com/datasets/puneet6060/intel-image-classification) dengan skrip berikut.
+   ```bash
+   python src/1_cnn_image_classification/00_download_dataset.py
+   ```
+
+#### Bagian 2: RNN Image Captioning
+
+1. **Download Dataset:**
+   Unduh dataset [Flickr8k](https://www.kaggle.com/datasets/adityajn105/flickr8k) dengan skrip berikut.
+
+   ```bash
+   python src/2_rnn_image_captioning/00_download_dataset.py
+   ```
+
+2. **Feature Extraction:**
+   Pre-process gambar menjadi fitur konteks menggunakan model `InceptionV4` dengan skrip berikut.
+
+   ```bash
+   python src/2_rnn_image_captioning/01_extract_features.py
+   ```
+
+3. **Caption Preprocessing:**
+   Pre-process caption menjadi fitur token dengan menjalankan semua sel di [`src/2_rnn_image_captioning/02_caption_preprocessing.ipynb`](./src/2_rnn_image_captioning/02_caption_preprocessing.ipynb).
 
 ---
 
 ## 🚀 Menggunakan Package
 
-Contoh penggunaan package (yang sederhana) dapat dilihat di `\pengujian\test.ipynb`. Untuk penggunaan langsung pada dataset, bisa lihat `\pengujian\pengujian.ipynb`. Selain itu, berikut "tutorial" atau "dokumentasi" singkat.
+Seluruh dokumentasi teknis, arsitektur kelas, dan contoh penggunaan _package_ `nn` buatan kami telah dirangkum dalam satu tutorial _notebook_ interaktif berikut.
 
-### **Consructor**
+&emsp; 👉 **[Buka Dokumentasi Utama](./src/doc.ipynb)**
 
-Untuk membangun suatu MLP, cukup dengan konsruktor `MLP` dengan memasukkan `Layer` yang diinginkan.
+Selain itu, untuk melihat penerapannya secara detail pada masalah dunia asli, alur pelatihan dan pengujian spesifik dapat dieksplorasikan pada _notebook_ eksperimen yang telah disusun berikut.
 
-```Python
-from ffnn import MLP, Layer
-
-model = MLP([
-   Layer(16, activation='relu', weight_init='he', l2=0.01),
-   Layer(8, activation='relu', weight_init='he', l1=0.005),
-   RMSNorm(8),
-   Layer(1, activation='sigmoid', weight_init='xavier')
-], input_size=2, seed=67)
-```
-
-### **Dynamic Layers**
-
-Jika ingin menambah `Layer` baru, bisa dengan metode `add()` dari `MLP`.
-
-```Python
-model = MLP(input_size=10, seed=42)
-
-for neurons in [32, 16, 8]:
-   model.add(Layer(neurons, activation='swish', weight_init='he'))
-
-model.add(Layer(3, activation='softmax', weight_init='xavier'))
-```
-
-### **Compilation**
-
-Dengan metode `compile()`, suatu `MLP` dilengkapi dengan fungsi _loss_ dan metode optimisasi yang diinginkan.
-
-- String:
-
-   ```Python
-   model.compile(optimizer='sgd', loss='mse')
-   ```
-
-- Hyperparameter:
-
-   ```Python
-   model.compile(
-      optimizer={'method': 'adam', 'learning_rate': 0.05},
-      loss='cce'
-   )
-   ```
-
-### **Training and Prediction**
-
-Untuk melakukan _training_, bisa dengan metode `fit()` dari `MLP`, yang melakukan validasi juga secara bersamaan. Untuk prediksi, bisa memanggil `MLP()` langsung.
-
-```Python
-history = model.fit(
-   X_train, y_train,
-   batch_size=32,
-   epochs=100,
-   learning_rate=0.01,
-   validation_data=(X_val, y_val),
-   verbose=1
-)
-
-plt.plot(history['train_loss'], label='Train Loss')
-plt.plot(history['val_loss'], label='Validation Loss')
-
-model(X_pred)
-```
-
-### **Save and Load**
-
-Simpan semua bobot suatu MLP ke file `.pkl` dengan `save()`. Lalu, jika arsitektur model sesuai, bobot dari suatu `.pkl` bisa dimuat dengan `load()`.
-
-```Python
-model.save('../saved_model.pkl')
-
-blank_model = MLP([
-   Layer(16, activation='relu'),
-   Layer(8, activation='relu'),
-   RMSNorm(8),
-   Layer(1, activation='sigmoid')
-], input_size=2)
-
-blank_model.load('../saved_model.pkl')
-```
+- **Image Classification:** Lihat folder [`src/1_cnn_image_classification/`](./src/1_cnn_image_classification)
+- **Image Captioning:** Lihat folder [`src/2_rnn_image_captioning/`](./src/2_rnn_image_captioning)
 
 ---
 
-## 👨‍💻 Author
+## 👨‍💻 Authors
 
-| Nama                 | NIM      | Pembagian Tugas                          |
-| -------------------- | -------- | ---------------------------------------- |
-| Albi Arrizkya Putra  | 10122062 | analisis dan pemodelan dataset, laporan  |
-| Timothy Niels Ruslim | 10123053 | implementasi FFNN dari _scrach_, laporan |
+| Nama                 | NIM      | Pembagian Tugas                                                                                                                                                                            |
+| -------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Beni Lesmana         | 10122043 | pelatihan model RNN di Keras, implementasi arsitektur Encoder-Decoder, eksperimen dan evaluasi model Encoder-Decoder, dan laporan                                                          |
+| Albi Arrizkya Putra  | 10122062 | pelatihan model CNN di Keras, implementasi arsitektur CNN, eksperimen dan evaluasi model CNN, dan laporan                                                                                  |
+| Timothy Niels Ruslim | 10123053 | implementasi utility functions, package utama yang termasuk forward dan backward propagation, layer-layer RNN dan CNN from scratch, feature extraction, preprocessing caption, dan laporan |
 
 Bukti dapat dilihat dari sejarah _commits_.
 
@@ -205,8 +183,8 @@ Bukti dapat dilihat dari sejarah _commits_.
 
 ## 🔗 Tautan
 
-- 📂 [Repository GitHub](https://github.com/timoruslim/Tubes1_Six-seven)
+- 📂 [Repository GitHub](https://github.com/timoruslim/Tubes2_AnakRudyKusdiantara)
 
 ---
 
-> Dibuat sebagai bagian dari Tugas Besar 1 IF3270 Pembelajaran Mesin 2026 – ITB
+> Dibuat sebagai bagian dari Tugas Besar 2 IF3270 Pembelajaran Mesin 2026 – ITB

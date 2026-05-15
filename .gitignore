@@ -17,3 +17,4 @@ spesifikasi.md
 **/models/rnn_lstm/*.json
 
 /tf_env/
+.vscode
