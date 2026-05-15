@@ -17,4 +17,4 @@ template.md.venv/
 **/models/rnn_lstm/*.keras
 **/models/rnn_lstm/*.png
 **/models/rnn_lstm/*.csv
-**/models/rnn_lstm/*.
+**/models/rnn_lstm/*.json
