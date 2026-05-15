@@ -3,7 +3,8 @@ import sys
 import numpy as np 
 from pathlib import Path
 from tqdm import tqdm
-
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 from keras.applications import InceptionV3
 from keras.applications.inception_v3 import preprocess_input
 

@@ -28,12 +28,25 @@ class Embedding(Layer):
       indices = inputs.astype(int) if isinstance(inputs, np.ndarray) else inputs.data.astype(int)
       if np.any(indices < 0) or np.any(indices >= self.vocab_size):
          raise ValueError(f"Embedding indices must be in range [0, {self.vocab_size}), got min={indices.min()}, max={indices.max()}")
-      return self.weights[indices] # same as doing multiplication by one-hot encoded vectors 
+      return self.weights[indices] 
    
    def build(self, input_shape):
       super().build(input_shape)
       self.output_shape = (*input_shape, self.embedding_dim)
    
+   @classmethod
+   def from_weights(cls, W):
+      from ..base import Module
+      obj = cls.__new__(cls)
+      Module.__init__(obj)
+      obj.vocab_size = W.shape[0]
+      obj.embedding_dim = W.shape[1]
+      obj.l1_lambda = 0.0
+      obj.l2_lambda = 0.0
+      obj.weights = Tensor(W)
+      obj.built = True
+      return obj
+
    def regularization_loss(self):
       reg_loss = Tensor(0.0) 
       if self.l1_lambda > 0:

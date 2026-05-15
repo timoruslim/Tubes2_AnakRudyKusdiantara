@@ -43,6 +43,19 @@ class Dense(Layer):
       self.weights = self.weight_initializer((self.input_size, self.output_size), rng=self.rng)
       self.bias = self.bias_initializer((1, self.output_size), rng=self.rng) 
 
+   @classmethod
+   def from_weights(cls, W, b, activation='linear'):
+      from ..base import Module
+      obj = cls.__new__(cls)
+      Module.__init__(obj)
+      obj.weights = Tensor(W)
+      obj.bias = Tensor(b.reshape(1, -1) if b.ndim == 1 else b)
+      obj.activation = ACTIVATIONS.get(activation)
+      obj.l1_lambda = 0.0
+      obj.l2_lambda = 0.0
+      obj.built = True
+      return obj
+
    def regularization_loss(self):
       reg_loss = Tensor(0.0) 
       if self.l1_lambda > 0:
@@ -50,4 +63,3 @@ class Dense(Layer):
       if self.l2_lambda > 0:
          reg_loss += self.l2_lambda * (self.weights ** 2).sum()
       return reg_loss
-

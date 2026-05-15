@@ -28,7 +28,8 @@ class SimpleRNNCell(Layer):
       self.bias_initializer = INITIALIZATIONS[bias_init]
 
    def forward(self, x_t, h_prev):
-      return self.activation(x_t @ self.W_ih + h_prev @ self.W_hh + self.bias)
+    h_prev = h_prev if isinstance(h_prev, Tensor) else Tensor(h_prev)
+    return self.activation(x_t @ self.W_ih + h_prev @ self.W_hh + self.bias)
    
    def build(self, input_shape):
       if len(input_shape) != 3:
@@ -41,6 +42,21 @@ class SimpleRNNCell(Layer):
       self.bias = self.bias_initializer((1, self.hidden_size), rng=self.rng) # single bias 
 
    
+   @classmethod
+   def from_weights(cls, W_ih, W_hh, b):
+      from ..base import Module
+      obj = cls.__new__(cls)
+      Module.__init__(obj)
+      obj.hidden_size = W_hh.shape[0]
+      obj.W_ih = Tensor(W_ih)
+      obj.W_hh = Tensor(W_hh)
+      obj.bias = Tensor(b.reshape(1, -1) if b.ndim == 1 else b)
+      obj.activation = ACTIVATIONS['tanh']
+      obj.l1_lambda = 0.0
+      obj.l2_lambda = 0.0
+      obj.built = True
+      return obj
+
    def regularization_loss(self):
       reg_loss = Tensor(0.0) 
       if self.l1_lambda > 0:
@@ -77,18 +93,17 @@ class LSTMCell(Layer):
       self.bias_initializer = INITIALIZATIONS[bias_init]
 
    def forward(self, x_t, h_prev, c_prev):
-      gates = x_t @ self.W_ih + h_prev @ self.W_hh + self.bias
-      i_gate, f_gate, C_gate, o_gate = gates.split(4, axis=1)
-      
-      i_gate = self.recurrent_activation(i_gate)
-      f_gate = self.recurrent_activation(f_gate)
-      C_gate = self.activation(C_gate)
-      o_gate = self.recurrent_activation(o_gate)
-
-      c_t = f_gate * c_prev + i_gate * C_gate
-      h_t = o_gate * self.activation(c_t)
-
-      return h_t, c_t
+    h_prev = h_prev if isinstance(h_prev, Tensor) else Tensor(h_prev)
+    c_prev = c_prev if isinstance(c_prev, Tensor) else Tensor(c_prev)
+    gates = x_t @ self.W_ih + h_prev @ self.W_hh + self.bias
+    i_gate, f_gate, C_gate, o_gate = gates.split(4, axis=1)
+    i_gate = self.recurrent_activation(i_gate)
+    f_gate = self.recurrent_activation(f_gate)
+    C_gate = self.activation(C_gate)
+    o_gate = self.recurrent_activation(o_gate)
+    c_t = f_gate * c_prev + i_gate * C_gate
+    h_t = o_gate * self.activation(c_t)
+    return h_t, c_t
    
    def build(self, input_shape):
       if len(input_shape) != 3:
@@ -101,6 +116,22 @@ class LSTMCell(Layer):
       self.bias = self.bias_initializer((1, 4 * self.hidden_size), rng=self.rng) 
       self.bias.data[0, self.hidden_size:2*self.hidden_size] = 1.0 # forget gate bias to 1 (unit_forget_bias in Keras)
    
+   @classmethod
+   def from_weights(cls, W_ih, W_hh, b):
+      from ..base import Module
+      obj = cls.__new__(cls)
+      Module.__init__(obj)
+      obj.hidden_size = W_hh.shape[0]
+      obj.W_ih = Tensor(W_ih)
+      obj.W_hh = Tensor(W_hh)
+      obj.bias = Tensor(b.reshape(1, -1) if b.ndim == 1 else b)
+      obj.activation = ACTIVATIONS['tanh']
+      obj.recurrent_activation = ACTIVATIONS['sigmoid']
+      obj.l1_lambda = 0.0
+      obj.l2_lambda = 0.0
+      obj.built = True
+      return obj
+
    def regularization_loss(self):
       reg_loss = Tensor(0.0) 
       if self.l1_lambda > 0:

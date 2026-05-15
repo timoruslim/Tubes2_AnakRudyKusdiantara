@@ -26,7 +26,7 @@ def sigmoid(h):
    sig_h = np.where(
       h.data >= 0,
       1 / (1 + np.exp(-h.data)), # h >= 0 
-      np.exp(h.data) / (1 + np.exp(h.data)) # h < 0
+      1 - 1 / (1 + np.exp(h.data)) # h < 0
    )
 
    if not _GradMode.enabled:
