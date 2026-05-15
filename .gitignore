@@ -1,5 +1,3 @@
-.venv/
-
 data/1_cnn_image_classification/*
 !data/1_cnn_image_classification/.gitkeep
 
@@ -12,9 +10,10 @@ __pycache__/
 .ipynb_checkpoints/
 
 spesifikasi.md
-template.md.venv/
 
 **/models/rnn_lstm/*.keras
 **/models/rnn_lstm/*.png
 **/models/rnn_lstm/*.csv
 **/models/rnn_lstm/*.json
+
+/tf_env/
