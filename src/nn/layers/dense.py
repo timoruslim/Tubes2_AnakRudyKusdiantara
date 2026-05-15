@@ -29,6 +29,7 @@ class Dense(Layer):
       self.bias_initializer = INITIALIZATIONS[bias_init]
    
    def forward(self, inputs):
+      inputs = inputs if isinstance(inputs, Tensor) else Tensor(inputs)
       h = inputs @ self.weights + self.bias
       return self.activation(h) if self.activation else h
    
