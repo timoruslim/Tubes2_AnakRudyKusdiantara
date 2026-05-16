@@ -13,9 +13,9 @@
 
 Di sini, kami membuat package `nn` yang memuat semua keperluan pembangunan suatu _neural network_ secara lengkap. Package ini meliputi layer-layer dense, konvolusi, pooling, rekuren, embedding, dan lainnya. Kedua _forward_ dan _backward pass_ diimplementasikan di package ini juga! Terdapat banyak jenis kustomisasi lainnya seperti fungsi aktivasi, metode inisialisasi bobot, fungsi loss, dan metode optimisasi. Implementasi selengkapnya bisa dilihat di folder [`src/nn/`](./src/nn).
 
-Selanjutnya, kami juga menerapkan package ini dalam menyelesaikan dua permasalahan. Pertama, kami membuat arsitektur CNN secara _custom_ untuk menyelesaikan masalah _image captioning_ dari dataset [Intel Image Classification](https://www.kaggle.com/datasets/puneet6060/intel-image-classification). Kedua, kami mereplikasikan arsitektur RNN berupa Encoder-Decoder "Show and Tell" oleh [Vinyals et al.](https://arxiv.org/abs/1411.4555) untuk menyelesaikan masalah _image captioning_ dari dataset [Flickr8k](https://www.kaggle.com/datasets/adityajn105/flickr8k). Implementasi selengkapnya bisa dilihat di folder [`src/1_cnn_image_classification/`](./src/1_cnn_image_classification) dan [`src/2_rnn_image_captioning/`](./src/2_rnn_image_captioning).
+Selanjutnya, kami juga menerapkan package ini dalam menyelesaikan dua permasalahan. Pertama, kami membuat arsitektur CNN secara _custom_ untuk menyelesaikan masalah _image captioning_ dari dataset [Intel Image Classification](https://www.kaggle.com/datasets/puneet6060/intel-image-classification). Kedua, kami mereplikasikan arsitektur RNN berupa Encoder-Decoder "Show and Tell" oleh [Vinyals et al.](https://arxiv.org/abs/1411.4555) untuk menyelesaikan masalah _image captioning_ dari dataset [Flickr 8k](https://www.kaggle.com/datasets/adityajn105/flickr8k). Implementasi selengkapnya bisa dilihat di folder [`src/1_cnn_image_classification/`](./src/1_cnn_image_classification) dan [`src/2_rnn_image_captioning/`](./src/2_rnn_image_captioning).
 
-Untuk melihat analisis lanjut mengenai implementasi library _from scratch_ dan hasil eksperimentasi arsiteltur CNN dan RNN, dapat dicek laporan di [`doc/Tubes2_AnakRudyKusdiantara.pdf`](./doc/Tubes2_AnakRudyKusdiantara.pdf).
+Untuk melihat analisis lanjut mengenai implementasi library _from scratch_ dan hasil eksperimentasi arsitektur CNN dan RNN, dapat dicek laporan di [`doc/Tubes2_AnakRudyKusdiantara.pdf`](./doc/Tubes2_AnakRudyKusdiantara.pdf).
 
 ---
 
@@ -122,7 +122,7 @@ Tubes2_AnakRudyKusdiantara/
    Jika file `requirements.txt` belum ada, bisa install manual.
 
    ```bash
-   pip install numpy scipy matplotlib pandas tqdm seaborn kaggle Pillow keras tensorflow notebook nltk
+   pip install numpy scipy matplotlib pandas tqdm seaborn kaggle pillow keras tensorflow notebook nltk
    ```
 
 ### Instalasi Dataset
