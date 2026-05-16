@@ -16,9 +16,6 @@ template.md
 tf_env/
 
 **/models/rnn_lstm/*.keras
-**/models/rnn_lstm/*.png
-**/models/rnn_lstm/*.csv
-**/models/rnn_lstm/*.json
 
 /tf_env/
 .vscode
