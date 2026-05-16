@@ -3,7 +3,7 @@
 # Convolutional and Recurrent Neural Networks
 
 ![Python](https://img.shields.io/badge/Python-3.13-blue?logo=python&logoColor=white)
-![NumPy](https://img.shields.io/badge/NumPy-2.2-4DABCF?logo=numpy&logoColor=fff)
+![NumPy](https://img.shields.io/badge/NumPy-2.3-4DABCF?logo=numpy&logoColor=fff)
 ![SciPy](https://img.shields.io/badge/SciPy-1.17.1-8CA1E5?logo=scipy&logoColor=white)
 ![Matplotlib](https://img.shields.io/badge/Matplotlib-3.10-11557c?logo=python&logoColor=white)
 
