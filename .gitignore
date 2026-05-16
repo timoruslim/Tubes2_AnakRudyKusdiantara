@@ -11,12 +11,9 @@ __pycache__/
 .ipynb_checkpoints/
 
 spesifikasi.md
-<<<<<<< HEAD
-=======
 template.md
 
 tf_env/
->>>>>>> 67eb451 (chore: run 16 experiment using keras)
 
 **/models/rnn_lstm/*.keras
 **/models/rnn_lstm/*.png
@@ -24,14 +21,10 @@ tf_env/
 **/models/rnn_lstm/*.json
 
 /tf_env/
-<<<<<<< HEAD
-.vscode
-=======
 .vscode
 
 BelajarTF/
 env_tf/
-
+src/1_cnn_image_classification/hasil*running/
 src/1_cnn_image_classification/saved_models/
 
->>>>>>> 67eb451 (chore: run 16 experiment using keras)

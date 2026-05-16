@@ -28,8 +28,8 @@ class SimpleRNNCell(Layer):
       self.bias_initializer = INITIALIZATIONS[bias_init]
 
    def forward(self, x_t, h_prev):
-    h_prev = h_prev if isinstance(h_prev, Tensor) else Tensor(h_prev)
-    return self.activation(x_t @ self.W_ih + h_prev @ self.W_hh + self.bias)
+      h_prev = h_prev if isinstance(h_prev, Tensor) else Tensor(h_prev)
+      return self.activation(x_t @ self.W_ih + h_prev @ self.W_hh + self.bias)
    
    def build(self, input_shape):
       if len(input_shape) != 3:
@@ -93,17 +93,17 @@ class LSTMCell(Layer):
       self.bias_initializer = INITIALIZATIONS[bias_init]
 
    def forward(self, x_t, h_prev, c_prev):
-    h_prev = h_prev if isinstance(h_prev, Tensor) else Tensor(h_prev)
-    c_prev = c_prev if isinstance(c_prev, Tensor) else Tensor(c_prev)
-    gates = x_t @ self.W_ih + h_prev @ self.W_hh + self.bias
-    i_gate, f_gate, C_gate, o_gate = gates.split(4, axis=1)
-    i_gate = self.recurrent_activation(i_gate)
-    f_gate = self.recurrent_activation(f_gate)
-    C_gate = self.activation(C_gate)
-    o_gate = self.recurrent_activation(o_gate)
-    c_t = f_gate * c_prev + i_gate * C_gate
-    h_t = o_gate * self.activation(c_t)
-    return h_t, c_t
+      h_prev = h_prev if isinstance(h_prev, Tensor) else Tensor(h_prev)
+      c_prev = c_prev if isinstance(c_prev, Tensor) else Tensor(c_prev)
+      gates = x_t @ self.W_ih + h_prev @ self.W_hh + self.bias
+      i_gate, f_gate, C_gate, o_gate = gates.split(4, axis=1)
+      i_gate = self.recurrent_activation(i_gate)
+      f_gate = self.recurrent_activation(f_gate)
+      C_gate = self.activation(C_gate)
+      o_gate = self.recurrent_activation(o_gate)
+      c_t = f_gate * c_prev + i_gate * C_gate
+      h_t = o_gate * self.activation(c_t)
+      return h_t, c_t
    
    def build(self, input_shape):
       if len(input_shape) != 3:

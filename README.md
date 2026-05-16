@@ -15,6 +15,8 @@ Di sini, kami membuat package `nn` yang memuat semua keperluan pembangunan suatu
 
 Selanjutnya, kami juga menerapkan package ini dalam menyelesaikan dua permasalahan. Pertama, kami membuat arsitektur CNN secara _custom_ untuk menyelesaikan masalah _image captioning_ dari dataset [Intel Image Classification](https://www.kaggle.com/datasets/puneet6060/intel-image-classification). Kedua, kami mereplikasikan arsitektur RNN berupa Encoder-Decoder "Show and Tell" oleh [Vinyals et al.](https://arxiv.org/abs/1411.4555) untuk menyelesaikan masalah _image captioning_ dari dataset [Flickr8k](https://www.kaggle.com/datasets/adityajn105/flickr8k). Implementasi selengkapnya bisa dilihat di folder [`src/1_cnn_image_classification/`](./src/1_cnn_image_classification) dan [`src/2_rnn_image_captioning/`](./src/2_rnn_image_captioning).
 
+Untuk melihat analisis lanjut mengenai implementasi library _from scratch_ dan hasil eksperimentasi arsiteltur CNN dan RNN, dapat dicek laporan di [`doc/Tubes2_AnakRudyKusdiantara.pdf`](./doc/Tubes2_AnakRudyKusdiantara.pdf).
+
 ---
 
 ## ✨ Fitur Utama
